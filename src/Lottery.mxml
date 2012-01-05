@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" 
+				minWidth="955" minHeight="600" creationComplete="application1_creationCompleteHandler(event)">
+	<mx:Style source="assets/css/Main.css" />
+	<mx:Script>
+		<![CDATA[
+			import com.greensock.TweenLite;
+			import com.zhangjiabo.views.SampleTitleWindow;
+			
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import utils.FlashAction;
+			private var flashAction:FlashAction = new FlashAction();
+			private var imgArr:Array = [];
+			private var lotteryTimer:Timer = new Timer(100);
+			public var selectedImg:Image;
+			private var peopleNum:int = 0;
+			public var lotteryRandom:int = 0;
+			private var loterryStarted:Boolean = false;
+			//			private var randomNu
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				configRequest.send();
+			}
+			private function onRollOverImg(event:MouseEvent):void
+			{
+				//				Image(event.currentTarget).width = 400;
+				//				Image(event.currentTarget).height = 400;
+				
+			}
+			private function onCreateImgComplete(event:FlexEvent):void
+			{
+				flashAction.setDefaultComponent(Image(event.currentTarget));
+			}
+			
+			protected function lotteryBtn_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				//				var startTime:Timer = new Timer();
+				//				for(var i:int = 0;i<imgArr.length;i++)
+				//				{
+				//					TweenLite.to(imgArr[i],1,{y:200});
+				//				}
+				//				TweenLite.delayedCall(1,onComplete);
+				if(!loterryStarted)
+				{
+					loterryStarted = true;
+					lotteryBtn.label = "停止";
+					lotteryTimer.addEventListener(TimerEvent.TIMER,onLotteryTimer);
+					lotteryTimer.start();
+				}
+				else
+				{
+					loterryStarted = false;
+					lotteryBtn.label = "开始";
+					lotteryTimer.stop();
+					imageContainer.removeChild(selectedImg);
+					PopUpManager.createPopUp(this,SampleTitleWindow,true);
+					for(var i:int = lotteryRandom;i<=peopleNum;i++)
+						imgArr[i] = imgArr[i+1];
+					imgArr.pop();
+					peopleNum--;
+					//					trace(selectedImg.x,selectedImg.y);
+				}
+			}
+			private function onLotteryTimer(event:TimerEvent):void
+			{
+				lotteryRandom = Math.floor(Math.random()*peopleNum);
+				if(selectedImg)
+					flashAction.setDefaultComponent(selectedImg);
+				selectedImg = imgArr[lotteryRandom];
+				flashAction.flashComponent(selectedImg);
+			}
+			private function onComplete():void
+			{
+				for(var i:int = 0;i<imgArr.length;i++)
+				{
+					imageContainer.removeAllChildren();
+					imageContainer.addChild(imgArr[i]);
+					//					TweenLite.to(imgArr[i],1,{height:0});
+				}
+				//				TweenLite.delayedCall(1,onStartLottery);
+			}
+			private function onStartLottery():void
+			{
+				for(var i:int = 0;i<imgArr.length;i++)
+				{
+					imgArr[i].width = 200;
+					imgArr[i].height= 200;
+				}
+			}
+			
+			protected function configRequest_resultHandler(event:ResultEvent):void
+			{
+				// TODO Auto-generated method stub
+				peopleNum = int(XML(event.result).@num);
+				for(var i:int = 0;i<peopleNum;i++)
+				{
+					var img:Image = new Image();
+					img.source = "assets/vilang/image (" + (i+1).toString() + ").jpg";
+					img.width = 93;
+					img.height = 70;
+					img.addEventListener(FlexEvent.CREATION_COMPLETE,onCreateImgComplete);
+					img.addEventListener(MouseEvent.ROLL_OVER,onRollOverImg);
+					imgArr[i] = img;
+					imageContainer.addChild(img);
+				}
+			}
+			
+			protected function configRequest_faultHandler(event:FaultEvent):void
+			{
+				// TODO Auto-generated method stub
+				Alert.show("无法加载configuration.xml文件");
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:HTTPService id="configRequest" url="assets/xml/configuration.xml" resultFormat="e4x" result="configRequest_resultHandler(event)" fault="configRequest_faultHandler(event)" />
+	<mx:HBox width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<mx:Panel id="imgPanel" width="90%" height="80%" layout="absolute">
+			<mx:Tile id="imageContainer" width="100%" height="100%" />
+		</mx:Panel>
+	</mx:HBox>
+	<mx:Button id="lotteryBtn" label="开始" click="lotteryBtn_clickHandler(event)" x="{this.width/2 - lotteryBtn.width/2}" y="90"/>
+</mx:Application>
