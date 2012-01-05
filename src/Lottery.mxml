@@ -129,4 +129,5 @@
 		</mx:Panel>
 	</mx:HBox>
 	<mx:Button id="lotteryBtn" label="开始" click="lotteryBtn_clickHandler(event)" x="{this.width/2 - lotteryBtn.width/2}" y="90"/>
+	<mx:HBox id="lotteryContainer" width="100%" height="75" bottom="0" horizontalAlign="center" verticalAlign="bottom"/>
 </mx:Application>
